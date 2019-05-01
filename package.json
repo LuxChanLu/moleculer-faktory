@@ -1,6 +1,6 @@
 {
   "name": "moleculer-faktory",
-  "version": "0.1.4",
+  "version": "1.0.0",
   "description": "Moleculer service for faktory queue management",
   "main": "index.js",
   "directories": {
