@@ -29,7 +29,7 @@ module.exports = {
   },
   methods: {
     async queue(ctx, name, params, hooks) {
-      return this.$client.push({ jobtype: name, args: [params, { hooks, meta: ctx.meta }] })
+      return this.$client.push({ jobtype: name, queue: name, args: [params, { hooks, meta: ctx.meta }] })
     }
   },
   async started() {

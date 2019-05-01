@@ -41,10 +41,11 @@ describe('Faktory client methods', () => {
 
   it('should queue job', async () => {
     service.$client.push = jest.fn()
-    await service.queue({ meta: { user: {} } }, 'test', { test: 42 }, { start: { handler: 'test' } })
+    await service.queue({ meta: { user: {} } }, 'job.test', { test: 42 }, { start: { handler: 'test' } })
     expect(service.$client.push).toHaveBeenCalledWith({
       args: [{ test: 42 }, { hooks: { start: { handler: 'test' } }, meta: { user: {} } }],
-      jobtype: 'test'
+      queue: 'job.test',
+      jobtype: 'job.test'
     })
   })
 })

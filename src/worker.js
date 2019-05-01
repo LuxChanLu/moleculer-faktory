@@ -63,7 +63,7 @@ module.exports = {
       return true
     },
     async queue(ctx, name, params, hooks) {
-      return this.$worker.client.push({ jobtype: name, args: [params, { hooks, meta: ctx.meta }] })
+      return this.$worker.client.push({ jobtype: name, queue: name, args: [params, { hooks, meta: ctx.meta }] })
     },
     $loadMiddlewares() {
       const middlewares = [...this.settings.faktory.middlewares]
@@ -97,11 +97,13 @@ module.exports = {
   },
 
   created() {
+    const registry = this.$jobRegistry()
     this.$worker = new Worker({
       url: this.settings.faktory.url,
       ...this.settings.faktory.options,
+      queues: Object.keys(registry),
       middleware: this.$loadMiddlewares(),
-      registry: this.$jobRegistry()
+      registry
     })
   },
   async started() {

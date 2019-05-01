@@ -227,6 +227,7 @@ describe('Faktory worker lifecycle actions', () => {
     await service.queue({ meta: { user: {} } }, 'test', { test: 42 }, { start: { handler: 'test' } })
     expect(service.$worker.client.push).toHaveBeenCalledWith({
       args: [{ test: 42 }, { hooks: { start: { handler: 'test' } }, meta: { user: {} } }],
+      queue: 'test',
       jobtype: 'test'
     })
   })
