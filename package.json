@@ -1,6 +1,6 @@
 {
   "name": "moleculer-faktory",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Moleculer service for faktory queue management",
   "main": "index.js",
   "directories": {
@@ -18,7 +18,10 @@
   },
   "keywords": [
     "moleculer",
-    "sentry"
+    "faktory",
+    "queue",
+    "job",
+    "async"
   ],
   "author": "Hugo Meyronneinc <hugo@yoursoft.run>",
   "license": "MIT",
