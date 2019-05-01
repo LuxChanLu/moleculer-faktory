@@ -222,4 +222,12 @@ describe('Faktory worker lifecycle actions', () => {
     })
   })
 
+  it('should queue job', async () => {
+    service.$worker.client.push = jest.fn()
+    await service.queue({ meta: { user: {} } }, 'test', { test: 42 }, { start: { handler: 'test' } })
+    expect(service.$worker.client.push).toHaveBeenCalledWith({
+      args: [{ test: 42 }, { hooks: { start: { handler: 'test' } }, meta: { user: {} } }],
+      jobtype: 'test'
+    })
+  })
 })
