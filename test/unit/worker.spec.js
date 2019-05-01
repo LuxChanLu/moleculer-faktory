@@ -12,7 +12,11 @@ describe('Faktory worker init', () => {
         }
       },
       jobs: {
-        'test.job'() {}
+        'test.job'() {},
+        'test.job.action': 'faktory.do'
+      },
+      actions: {
+        'do'() { }
       }
     })
     expect(service).toBeDefined()
@@ -21,6 +25,7 @@ describe('Faktory worker init', () => {
     expect(service.$worker.client.connectionFactory.port).toBe('7419')
     expect(service.$worker.client.password).toBe('password')
     expect(service.$worker.registry['test.job']).toBeDefined()
+    expect(service.$worker.registry['test.job.action']).toBeDefined()
   })
 
   it('should init worker without hooks middleware', async () => {
@@ -53,6 +58,35 @@ describe('Faktory worker init', () => {
     expect(service).toBeDefined()
     expect(service.$worker).toBeDefined()
     expect(service.$worker.middleware[2]).toBeDefined() // Logs + Hooks + User middlware
+  })
+})
+
+describe('Faktory worker job handler', () => {
+  const broker = new ServiceBroker({ logger: false })
+  const service = broker.createService({
+    mixins: [WorkerService],
+    jobs: {
+      'test.job.action': 'faktory.do'
+    },
+    actions: {
+      'do'() { }
+    }
+  })
+  service.$worker.work = jest.fn()
+  service.$worker.stop = jest.fn()
+
+  broker.call = jest.fn()
+
+  beforeAll(() => broker.start())
+  beforeAll(() => broker.stop())
+
+  it('should call handler with action (And meta passed in args)', async () => {
+    const data = { job: { args: [42, { meta: { test: true } }] } }
+    await service.$worker.registry['test.job.action'](data)
+    expect(broker.call).toHaveBeenCalledWith('faktory.do', data, { meta: { test: true } })
+    delete data.job.args
+    await service.$worker.registry['test.job.action'](data)
+    expect(broker.call).toHaveBeenCalledWith('faktory.do', data, { meta: undefined })
   })
 })
 

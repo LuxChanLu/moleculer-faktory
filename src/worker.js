@@ -51,6 +51,9 @@ module.exports = {
 
   jobs: { },
 
+  /*
+  * Methods (TODO: Find a better way to achive these two...)
+  */
   methods: {
     async callHook(ctx, job, hook) {
       if (job.args && Array.isArray(job.args)) {
@@ -62,6 +65,15 @@ module.exports = {
         }
       }
       return true
+    },
+    findMeta(job) {
+      if (job.args && Array.isArray(job.args)) {
+        for (const arg of job.args) {
+          if (typeof arg === 'object' && typeof arg.meta === 'object') {
+            return arg.meta
+          }
+        }
+      }
     }
   },
 
@@ -82,11 +94,16 @@ module.exports = {
       await next()
       this.logger.debug(`[Faktory] job ${job.jobtype} ended`)
     })
+    const registry = {}
+    for (const job of Object.keys(this.schema.jobs)) {
+      const jobHandler = this.schema.jobs[job]
+      registry[job] = typeof jobHandler === 'string' ? async data => this.broker.call(jobHandler, data, { meta: this.findMeta(data.job) }) : jobHandler
+    }
     this.$worker = new Worker({
       url: this.settings.faktory.url,
       ...this.settings.faktory.options,
       middleware: middlewares,
-      registry: this.schema.jobs
+      registry
     })
   },
   async started() {
