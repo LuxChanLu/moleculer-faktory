@@ -129,12 +129,17 @@ describe('Faktory worker lifecycle actions', () => {
         args: [{ actionParam: true }, { meta: { user: {} } }]
       }
       broker.call = jest.fn()
-      await service.$worker.registry['faktory.job.test']({ job })
+      let thunk = service.$worker.registry['faktory.job.test'](...job.args)
+      await thunk({ job })
       expect(broker.call).toHaveBeenCalledWith('faktory.job.test', { actionParam: true }, { meta: { user: {} } })
       broker.call = jest.fn()
       delete job.args[1]
-      await service.$worker.registry['faktory.job.test']({ job })
+      thunk = service.$worker.registry['faktory.job.test'](...job.args)
+      await thunk({ job })
       expect(broker.call).toHaveBeenCalledWith('faktory.job.test', { actionParam: true }, { meta: {} })
+      thunk = service.$worker.registry['faktory.job.test']()
+      await thunk({ job })
+      expect(broker.call).toHaveBeenCalledWith('faktory.job.test', { }, { meta: {} })
     })
 
     it('should call start hooks', async () => {

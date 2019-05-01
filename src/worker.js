@@ -88,7 +88,7 @@ module.exports = {
       for (const action of Object.keys(this.schema.actions)) {
         const { queue } = this.schema.actions[action]
         if (queue) {
-          registry[`${this.name}.${action}`] = async (params = {}, misc = {}) => ({ job }) => this.broker.call(`${this.name}.${action}`, params, { meta: { ...misc.meta, job: job.jid } })
+          registry[`${this.name}.${action}`] = (params = {}, misc = {}) => async ({ job }) => this.broker.call(`${this.name}.${action}`, params, { meta: { ...misc.meta, job: job.jid } })
         }
       }
       return registry
