@@ -21,7 +21,6 @@ module.exports = {
       /** @type {Object?} Additional options for `new Worker()` */
       options: {
         concurrency: 5,
-        queues: ['default'],
         timeout: 25 * 1000
       },
       /** @type {Array?} Middlewares for faktory */
