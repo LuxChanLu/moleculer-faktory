@@ -34,9 +34,14 @@ module.exports = {
       hooks: true
     }
   },
-  jobs: {
-    async resize(image, size) {
-      // Do the magic here !
+  actions: {
+    resize: {
+      queue: true,
+      async handler(ctx) {
+        const { image, size } = ctx.params
+        const { user } = ctx.meta
+        // Do the magic here !
+      }
     }
   }
 }
@@ -46,6 +51,7 @@ module.exports = {
 const { ClientMixin } = require('moleculer-faktory')
 
 module.exports = {
+  name: 'web',
   mixins: [ClientMixin],
   settings: {
     faktory: {
@@ -59,13 +65,14 @@ module.exports = {
   },
   actions: {
     async 'image.upload'(ctx) {
-      await this.queue('images.resize', ctx.params.images, 'large-landscape')
+      ctx.meta.user = {} // Meta will be passed to the job handler
+      await this.queue(ctx, 'images.resize', { image: ctx.params.image, size: 'landscape.large' })
       return 'In progress...'
     }
   }
 }
 ```
-You can also use hooks (No native from faktory, middleware in this module : See src/worker.js#71)
+You can also use hooks (No native from faktory, middleware in this module : See src/worker.js#72)
 ```js
 const { ClientMixin } = require('moleculer-faktory')
 
@@ -85,11 +92,10 @@ module.exports = {
   actions: {
     async 'image.upload'(ctx) {
       const { image } = ctx.params
-      await this.queue('images.resize', image, 'large-landscape', {
-        hooks: {
-          start: { handler: 'web.image.start' },
-          end: { handler: 'web.image.end', params: { image }, meta: { user: ctx.meta.user } }
-        }
+      ctx.meta.user = {} // Meta will be passed to the job handler and also the hooks
+      await this.queue(ctx, 'images.resize', { image: ctx.params.image, size: 'landscape.large' }, {
+        start: { handler: 'web.image.start' },
+        end: { handler: 'web.image.end', params: { image } }
       })
       return 'In progress...'
     },

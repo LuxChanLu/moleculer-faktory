@@ -51,33 +51,22 @@ module.exports = {
 
   jobs: { },
 
-  /*
-  * Methods (TODO: Find a better way to achive these two...)
-  */
   methods: {
     async callHook(ctx, job, hook) {
-      if (job.args && Array.isArray(job.args)) {
-        for (const arg of job.args) {
-          if (typeof arg === 'object' && typeof arg[hook] === 'object' && typeof arg[hook].handler === 'string') {
-            const { handler, params = {}, meta } = arg[hook]
-            return ctx.call(handler, { job, ...params }, meta ? { meta } : undefined)
-          }
+      if (job.args && typeof job.args[1] === 'object' && typeof job.args[1].hooks === 'object') {
+        const { hooks, meta = {} } = job.args[1]
+        if (typeof hooks[hook] === 'object' && typeof hooks[hook].handler === 'string') {
+          const { handler, params = {}} = hooks[hook]
+          return ctx.call(handler, params, { meta: { ...meta, job: job.jid } })
         }
       }
       return true
-    },
-    findMeta(job) {
-      if (job.args && Array.isArray(job.args)) {
-        for (const arg of job.args) {
-          if (typeof arg === 'object' && typeof arg.meta === 'object') {
-            return arg.meta
-          }
-        }
-      }
     }
   },
 
   created() {
+
+    // Load user, hook, logs middlewares
     const middlewares = [...this.settings.faktory.middlewares]
     if (this.settings.faktory.hooks) {
       middlewares.push(async ({ job }, next) => {
@@ -94,11 +83,17 @@ module.exports = {
       await next()
       this.logger.debug(`[Faktory] job ${job.jobtype} ended`)
     })
+
+    // Register each job
     const registry = {}
-    for (const job of Object.keys(this.schema.jobs)) {
-      const jobHandler = this.schema.jobs[job]
-      registry[job] = typeof jobHandler === 'string' ? async data => this.broker.call(jobHandler, data, { meta: this.findMeta(data.job) }) : jobHandler
+    for (const action of Object.keys(this.schema.actions)) {
+      const { queue } = this.schema.actions[action]
+      if (queue) {
+        registry[`${this.name}.${action}`] = async ({ job }) => this.broker.call(`${this.name}.${action}`, job.args[0], { meta: { ...(job.args[1] || {}).meta, job: job.jid } })
+      }
     }
+
+    // Create worker
     this.$worker = new Worker({
       url: this.settings.faktory.url,
       ...this.settings.faktory.options,

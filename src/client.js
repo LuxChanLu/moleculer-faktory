@@ -28,8 +28,8 @@ module.exports = {
     })
   },
   methods: {
-    async queue(name, ...args) {
-      return this.$client.push({ jobtype: name, args })
+    async queue(ctx, name, params, hooks) {
+      return this.$client.push({ jobtype: name, args: [params, { hooks, meta: ctx.meta }] })
     }
   },
   async started() {

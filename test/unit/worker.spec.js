@@ -11,12 +11,12 @@ describe('Faktory worker init', () => {
           url: 'tcp://:password@server:7419',
         }
       },
-      jobs: {
-        'test.job'() {},
-        'test.job.action': 'faktory.do'
-      },
       actions: {
-        'do'() { }
+        'test.job': {
+          queue: true,
+          async handler() {}
+        },
+        'test.no.job'() {}
       }
     })
     expect(service).toBeDefined()
@@ -24,8 +24,8 @@ describe('Faktory worker init', () => {
     expect(service.$worker.client.connectionFactory.host).toBe('server')
     expect(service.$worker.client.connectionFactory.port).toBe('7419')
     expect(service.$worker.client.password).toBe('password')
-    expect(service.$worker.registry['test.job']).toBeDefined()
-    expect(service.$worker.registry['test.job.action']).toBeDefined()
+    expect(service.$worker.registry['faktory.test.job']).toBeDefined()
+    expect(service.$worker.registry['faktory.test.no.job']).toBeUndefined()
   })
 
   it('should init worker without hooks middleware', async () => {
@@ -61,34 +61,6 @@ describe('Faktory worker init', () => {
   })
 })
 
-describe('Faktory worker job handler', () => {
-  const broker = new ServiceBroker({ logger: false })
-  const service = broker.createService({
-    mixins: [WorkerService],
-    jobs: {
-      'test.job.action': 'faktory.do'
-    },
-    actions: {
-      'do'() { }
-    }
-  })
-  service.$worker.work = jest.fn()
-  service.$worker.stop = jest.fn()
-
-  broker.call = jest.fn()
-
-  beforeAll(() => broker.start())
-  beforeAll(() => broker.stop())
-
-  it('should call handler with action (And meta passed in args)', async () => {
-    const data = { job: { args: [42, { meta: { test: true } }] } }
-    await service.$worker.registry['test.job.action'](data)
-    expect(broker.call).toHaveBeenCalledWith('faktory.do', data, { meta: { test: true } })
-    delete data.job.args
-    await service.$worker.registry['test.job.action'](data)
-    expect(broker.call).toHaveBeenCalledWith('faktory.do', data, { meta: undefined })
-  })
-})
 
 describe('Faktory worker lifecycle actions', () => {
   const broker = new ServiceBroker({ logger: false })
@@ -96,7 +68,11 @@ describe('Faktory worker lifecycle actions', () => {
     mixins: [WorkerService],
     actions: {
       'hooks.test.start'() {},
-      'hooks.test.end'() {}
+      'hooks.test.end'() {},
+      'job.test': {
+        queue: true,
+        async handler() { }
+      }
     }
   })
   service.$worker.work = jest.fn()
@@ -134,60 +110,97 @@ describe('Faktory worker lifecycle actions', () => {
     service.logger.debug.mockRestore()
   })
 
-  describe('Hooks', () => {
+  it('should run hook middleware', async () => {
+    const next = jest.fn()
+    const job = {
+      jobtype: 'job.test',
+      args: [{ actionParam: true }]
+    }
+    broker.emit = jest.fn()
+    broker.call = jest.fn()
+    await service.$worker.middleware[1]({ job }, next)
+    expect(next).toHaveBeenCalled()
+  })
+
+  describe('Job handle', () => {
+    it('should run job', async () => {
+      const job = {
+        jobtype: 'job.test',
+        args: [{ actionParam: true }, { meta: { user: {} } }]
+      }
+      broker.call = jest.fn()
+      await service.$worker.registry['faktory.job.test']({ job })
+      expect(broker.call).toHaveBeenCalledWith('faktory.job.test', { actionParam: true }, { meta: { user: {} } })
+      broker.call = jest.fn()
+      delete job.args[1]
+      await service.$worker.registry['faktory.job.test']({ job })
+      expect(broker.call).toHaveBeenCalledWith('faktory.job.test', { actionParam: true }, { meta: {} })
+    })
+
     it('should call start hooks', async () => {
       const next = jest.fn()
       const job = {
+        jid: 1,
         jobtype: 'job.test',
-        args: [
-          42,
-          {
+        args: [{
+          actionParam: true
+        }, {
+          hooks: {
             start: { handler: 'faktory.hooks.test.start', params: { test: true } }
           }
-        ]
+        }]
       }
       broker.emit = jest.fn()
       broker.call = jest.fn()
       await service.$worker.middleware[1]({ job }, next)
       expect(next).toHaveBeenCalled()
       expect(broker.emit).toHaveBeenCalledWith('faktory.jobs.job.test.start', job)
-      expect(broker.call).toHaveBeenCalledWith('faktory.hooks.test.start', { job, test: true }, undefined)
+      expect(broker.call).toHaveBeenCalledWith('faktory.hooks.test.start', { test: true }, { meta: { job: job.jid } })
     })
 
     it('should call end hooks', async () => {
       const next = jest.fn()
       const job = {
         jobtype: 'job.test',
-        args: [
-          42,
-          { end: { handler: 'faktory.hooks.test.end' } }
-        ]
+        args: [{
+          actionParam: true
+        }, {
+          hooks: {
+            end: { handler: 'faktory.hooks.test.end' }
+          },
+          meta: {
+            user: {}
+          }
+        }]
       }
       broker.emit = jest.fn()
       broker.call = jest.fn()
       await service.$worker.middleware[1]({ job }, next)
       expect(next).toHaveBeenCalled()
       expect(broker.emit).toHaveBeenCalledWith('faktory.jobs.job.test.end', job)
-      expect(broker.call).toHaveBeenCalledWith('faktory.hooks.test.end', { job }, undefined)
+      expect(broker.call).toHaveBeenCalledWith('faktory.hooks.test.end', { }, { meta: { user: {}, job: job.jid } })
     })
 
     it('should call start hooks and block job', async () => {
       const next = jest.fn()
       const job = {
+        jid: 1,
         jobtype: 'job.test',
-        args: [
-          42,
-          {
-            start: { handler: 'faktory.hooks.test.start', params: { test: true }, meta: { zero: 'two' } }
-          }
-        ]
+        args: [{
+          actionParam: true
+        }, {
+          hooks: {
+            start: { handler: 'faktory.hooks.test.start', params: { test: true } }
+          },
+          meta: { zero: 'two' }
+        }]
       }
       broker.emit = jest.fn()
       broker.call = jest.fn(() => false)
       await service.$worker.middleware[1]({ job }, next)
       expect(next).not.toHaveBeenCalled()
       expect(broker.emit).toHaveBeenCalledWith('faktory.jobs.job.test.start', job)
-      expect(broker.call).toHaveBeenCalledWith('faktory.hooks.test.start', { job, test: true }, { meta: { zero: 'two' } })
+      expect(broker.call).toHaveBeenCalledWith('faktory.hooks.test.start', { test: true }, { meta: { zero: 'two', job: job.jid } })
       expect(broker.emit).not.toHaveBeenCalledWith('faktory.jobs.job.test.end', job)
       expect(broker.call).not.toHaveBeenCalledWith('faktory.hooks.test.end', { job })
     })
@@ -195,6 +208,7 @@ describe('Faktory worker lifecycle actions', () => {
     it('should not call hooks (No args)', async () => {
       const next = jest.fn()
       const job = {
+        jid: 1,
         jobtype: 'job.test'
       }
       broker.emit = jest.fn()
@@ -202,7 +216,7 @@ describe('Faktory worker lifecycle actions', () => {
       await service.$worker.middleware[1]({ job }, next)
       expect(next).toHaveBeenCalled()
       expect(broker.emit).toHaveBeenCalledWith('faktory.jobs.job.test.start', job)
-      expect(broker.call).not.toHaveBeenCalledWith('faktory.hooks.test.start', { job, test: true })
+      expect(broker.call).not.toHaveBeenCalledWith('faktory.hooks.test.start', { test: true })
       expect(broker.emit).toHaveBeenCalledWith('faktory.jobs.job.test.end', job)
       expect(broker.call).not.toHaveBeenCalledWith('faktory.hooks.test.end', { job })
     })
