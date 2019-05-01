@@ -51,12 +51,12 @@ module.exports = {
   jobs: { },
 
   methods: {
-    async $callHook(ctx, job, hook) {
+    async $callHook(ctx, { job, result }, hook) {
       if (job.args && typeof job.args[1] === 'object' && typeof job.args[1].hooks === 'object') {
         const { hooks, meta = {} } = job.args[1]
         if (typeof hooks[hook] === 'object' && typeof hooks[hook].handler === 'string') {
-          const { handler, params = {}} = hooks[hook]
-          return ctx.call(handler, params, { meta: { ...meta, job: job.jid } })
+          const { handler, params = {} } = hooks[hook]
+          return ctx.call(handler, params, { meta: { ...meta, job: job.jid, result } })
         }
       }
       return true
@@ -67,12 +67,13 @@ module.exports = {
     $loadMiddlewares() {
       const middlewares = [...this.settings.faktory.middlewares]
       if (this.settings.faktory.hooks) {
-        middlewares.push(async ({ job }, next) => {
+        middlewares.push(async (ctx, next) => {
+          const { job } = ctx
           this.broker.emit(`faktory.jobs.${job.jobtype}.start`, job)
-          if ((await this.$callHook(this.broker, job, 'start')) !== false) {
+          if ((await this.$callHook(this.broker, ctx, 'start')) !== false) {
             await next()
-            await this.$callHook(this.broker, job, 'end')
-            this.broker.emit(`faktory.jobs.${job.jobtype}.end`, job)
+            await this.$callHook(this.broker, ctx, 'end')
+            this.broker.emit(`faktory.jobs.${job.jobtype}.end`, { ...job, result: ctx.result })
           }
         })
       }
@@ -88,7 +89,8 @@ module.exports = {
       for (const action of Object.keys(this.schema.actions)) {
         const { queue } = this.schema.actions[action]
         if (queue) {
-          registry[`${this.name}.${action}`] = (params = {}, misc = {}) => async ({ job }) => this.broker.call(`${this.name}.${action}`, params, { meta: { ...misc.meta, job: job.jid } })
+          registry[`${this.name}.${action}`] = (params = {}, misc = {}) =>
+            async ctx => ctx.result = await this.broker.call(`${this.name}.${action}`, params, { meta: { ...misc.meta, job: ctx.job.jid } })
         }
       }
       return registry
