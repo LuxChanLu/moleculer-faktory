@@ -79,7 +79,7 @@ describe('Faktory worker lifecycle actions', () => {
   service.$worker.stop = jest.fn()
 
   beforeAll(() => broker.start())
-  beforeAll(() => broker.stop())
+  afterAll(() => broker.stop())
 
   it('should quiet worker', async () => {
     await expect(broker.call('faktory.is.quiet')).resolves.toBeFalsy()
