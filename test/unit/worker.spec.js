@@ -188,6 +188,30 @@ describe('Faktory worker lifecycle actions', () => {
       expect(broker.call).toHaveBeenCalledWith('faktory.hooks.test.end', { }, { meta: { user: {}, job: job.jid, result: 42 } })
     })
 
+    it('should call error hooks', async () => {
+      const error = new Error('Error')
+      const next = jest.fn(() => { throw error })
+      const job = {
+        jobtype: 'job.test',
+        args: [{
+          actionParam: true
+        }, {
+          hooks: {
+            error: { handler: 'faktory.hooks.test.error' }
+          },
+          meta: {
+            user: {}
+          }
+        }]
+      }
+      broker.emit = jest.fn()
+      broker.call = jest.fn()
+      await service.$worker.middleware[1]({ job }, next)
+      expect(next).toHaveBeenCalled()
+      expect(broker.emit).toHaveBeenCalledWith('faktory.jobs.job.test.error', { ...job, error })
+      expect(broker.call).toHaveBeenCalledWith('faktory.hooks.test.error', { }, { meta: { user: {}, job: job.jid, error } })
+    })
+
     it('should call start hooks and block job', async () => {
       const next = jest.fn()
       const job = {

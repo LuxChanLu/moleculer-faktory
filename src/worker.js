@@ -51,12 +51,12 @@ module.exports = {
   jobs: { },
 
   methods: {
-    async $callHook(ctx, { job, result }, hook) {
+    async $callHook(ctx, { job, result, error }, hook) {
       if (job.args && typeof job.args[1] === 'object' && typeof job.args[1].hooks === 'object') {
         const { hooks, meta = {} } = job.args[1]
         if (typeof hooks[hook] === 'object' && typeof hooks[hook].handler === 'string') {
           const { handler, params = {} } = hooks[hook]
-          return ctx.call(handler, params, { meta: { ...meta, job: job.jid, result } })
+          return ctx.call(handler, params, { meta: { ...meta, job: job.jid, result, error } })
         }
       }
       return true
@@ -71,9 +71,15 @@ module.exports = {
           const { job } = ctx
           this.broker.emit(`faktory.jobs.${job.jobtype}.start`, job)
           if ((await this.$callHook(this.broker, ctx, 'start')) !== false) {
-            await next()
-            await this.$callHook(this.broker, ctx, 'end')
-            this.broker.emit(`faktory.jobs.${job.jobtype}.end`, { ...job, result: ctx.result })
+            try {
+              await next()
+              await this.$callHook(this.broker, ctx, 'end')
+              this.broker.emit(`faktory.jobs.${job.jobtype}.end`, { ...job, result: ctx.result })
+            } catch (error) {
+              ctx.error = error
+              await this.$callHook(this.broker, ctx, 'error')
+              this.broker.emit(`faktory.jobs.${job.jobtype}.error`, { ...job, result: ctx.result, error: ctx.error })
+            }
           }
         })
       }
