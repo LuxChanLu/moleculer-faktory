@@ -17,7 +17,9 @@ module.exports = {
       /** @type {String} Faktory url (tcp://:passqueue@localhost:7419/) also FAKTORY_URL can be use. */
       url: 'tcp://:passqueue@localhost:7419',
       /** @type {Object?} Additional options for `new Client()` */
-      options: { }
+      options: { },
+      /** @type {Boolean?} Prefix queue name with broker namespace */
+      namespaced: false
     }
   },
 
@@ -29,7 +31,7 @@ module.exports = {
   },
   methods: {
     async queue(ctx, name, params, hooks) {
-      return this.$client.push({ jobtype: name, queue: name, args: [params, { hooks, meta: ctx.meta }] })
+      return this.$client.push({ jobtype: name, queue: this.settings.faktory.namespaced ? `${this.broker.namespace}.${name}` : name, args: [params, { hooks, meta: ctx.meta }] })
     }
   },
   async started() {

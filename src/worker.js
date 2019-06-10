@@ -26,7 +26,9 @@ module.exports = {
       /** @type {Array?} Middlewares for faktory */
       middlewares: [],
       /** @type {Boolean?} Enable hooks middleware */
-      hooks: true
+      hooks: true,
+      /** @type {Boolean?} Prefix queue name with broker namespace */
+      namespaced: false
     }
   },
 
@@ -105,11 +107,12 @@ module.exports = {
 
   created() {
     const registry = this.$jobRegistry()
+    const queues = Object.keys(registry)
     this.$worker = new Worker({
       url: this.settings.faktory.url,
       ...this.settings.faktory.options,
-      queues: Object.keys(registry),
       middleware: this.$loadMiddlewares(),
+      queues: this.settings.faktory.namespaced ? queues.map(queue => `${this.broker.namespace}.${queue}`) : queues,
       registry
     })
   },

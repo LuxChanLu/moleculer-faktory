@@ -28,7 +28,7 @@ describe('Faktory client init', () => {
 })
 
 describe('Faktory client methods', () => {
-  const broker = new ServiceBroker({ logger: false })
+  const broker = new ServiceBroker({ namespace: 'namespace', logger: false })
   const service = broker.createService({
     name: 'test',
     mixins: [ClientService]
@@ -45,6 +45,17 @@ describe('Faktory client methods', () => {
     expect(service.$client.push).toHaveBeenCalledWith({
       args: [{ test: 42 }, { hooks: { start: { handler: 'test' } }, meta: { user: {} } }],
       queue: 'job.test',
+      jobtype: 'job.test'
+    })
+  })
+
+  it('should queue namespaced', async () => {
+    service.settings.faktory.namespaced = true
+    service.$client.push = jest.fn()
+    await service.queue({ meta: { user: {} } }, 'job.test', { test: 42 }, { start: { handler: 'test' } })
+    expect(service.$client.push).toHaveBeenCalledWith({
+      args: [{ test: 42 }, { hooks: { start: { handler: 'test' } }, meta: { user: {} } }],
+      queue: 'namespace.job.test',
       jobtype: 'job.test'
     })
   })

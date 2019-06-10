@@ -26,6 +26,35 @@ describe('Faktory worker init', () => {
     expect(service.$worker.client.password).toBe('password')
     expect(service.$worker.registry['faktory.test.job']).toBeDefined()
     expect(service.$worker.registry['faktory.test.no.job']).toBeUndefined()
+    expect(service.$worker.queues).toEqual(['faktory.test.job'])
+  })
+
+  it('should init worker namespaced', async () => {
+    const broker = new ServiceBroker({ namespace: 'namespace', logger: false })
+    const service = broker.createService({
+      mixins: [WorkerService],
+      settings: {
+        faktory: {
+          url: 'tcp://:password@server:7419',
+          namespaced: true
+        }
+      },
+      actions: {
+        'test.job': {
+          queue: true,
+          async handler() {}
+        },
+        'test.no.job'() {}
+      }
+    })
+    expect(service).toBeDefined()
+    expect(service.$worker).toBeDefined()
+    expect(service.$worker.client.connectionFactory.host).toBe('server')
+    expect(service.$worker.client.connectionFactory.port).toBe('7419')
+    expect(service.$worker.client.password).toBe('password')
+    expect(service.$worker.registry['faktory.test.job']).toBeDefined()
+    expect(service.$worker.registry['faktory.test.no.job']).toBeUndefined()
+    expect(service.$worker.queues).toEqual(['namespace.faktory.test.job'])
   })
 
   it('should init worker without hooks middleware', async () => {
