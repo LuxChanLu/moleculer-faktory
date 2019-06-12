@@ -92,7 +92,7 @@ describe('Faktory worker init', () => {
 
 
 describe('Faktory worker lifecycle actions', () => {
-  const broker = new ServiceBroker({ logger: false })
+  const broker = new ServiceBroker({ namespace: 'namespace', logger: false })
   const service = broker.createService({
     mixins: [WorkerService],
     actions: {
@@ -289,6 +289,17 @@ describe('Faktory worker lifecycle actions', () => {
       args: [{ test: 42 }, { hooks: { start: { handler: 'test' } }, meta: { user: {} } }],
       queue: 'test',
       jobtype: 'test'
+    })
+  })
+
+  it('should queue namespaced', async () => {
+    service.settings.faktory.namespaced = true
+    service.$worker.client.push = jest.fn()
+    await service.queue({ meta: { user: {} } }, 'job.test', { test: 42 }, { start: { handler: 'test' } })
+    expect(service.$worker.client.push).toHaveBeenCalledWith({
+      args: [{ test: 42 }, { hooks: { start: { handler: 'test' } }, meta: { user: {} } }],
+      queue: 'namespace.job.test',
+      jobtype: 'job.test'
     })
   })
 })

@@ -1,6 +1,6 @@
 {
   "name": "moleculer-faktory",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Moleculer service for faktory queue management",
   "main": "index.js",
   "directories": {
@@ -42,10 +42,10 @@
     "faktory-worker": "^3.0.2"
   },
   "devDependencies": {
-    "@types/jest": "^24.0.12",
-    "coveralls": "^3.0.3",
+    "@types/jest": "^24.0.13",
+    "coveralls": "^3.0.4",
     "eslint": "^5.16.0",
-    "eslint-plugin-jest": "^22.5.1",
+    "eslint-plugin-jest": "^22.6.4",
     "jest": "^24.8.0",
     "jest-cli": "^24.8.0",
     "moleculer": "^0.13.9"

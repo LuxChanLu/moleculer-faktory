@@ -64,7 +64,7 @@ module.exports = {
       return true
     },
     async queue(ctx, name, params, hooks) {
-      return this.$worker.client.push({ jobtype: name, queue: name, args: [params, { hooks, meta: ctx.meta }] })
+      return this.$worker.client.push({ jobtype: name, queue: this.settings.faktory.namespaced ? `${this.broker.namespace}.${name}` : name, args: [params, { hooks, meta: ctx.meta }] })
     },
     $loadMiddlewares() {
       const middlewares = [...this.settings.faktory.middlewares]
