@@ -81,6 +81,7 @@ module.exports = {
               ctx.error = error
               await this.$callHook(this.broker, ctx, 'error')
               this.broker.emit(`faktory.jobs.${job.jobtype}.error`, { ...job, result: ctx.result, error: ctx.error })
+              throw error
             }
           }
         })

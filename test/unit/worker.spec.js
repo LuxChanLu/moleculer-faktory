@@ -235,7 +235,13 @@ describe('Faktory worker lifecycle actions', () => {
       }
       broker.emit = jest.fn()
       broker.call = jest.fn()
-      await service.$worker.middleware[1]({ job }, next)
+      let excpection = null
+      try {
+        await service.$worker.middleware[1]({ job }, next)
+      } catch (error) {
+        excpection = error
+      }
+      expect(excpection).toEqual(error)
       expect(next).toHaveBeenCalled()
       expect(broker.emit).toHaveBeenCalledWith('faktory.jobs.job.test.error', { ...job, error })
       expect(broker.call).toHaveBeenCalledWith('faktory.hooks.test.error', { }, { meta: { user: {}, job: job.jid, error } })
