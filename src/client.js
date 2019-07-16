@@ -31,7 +31,7 @@ module.exports = {
   },
   methods: {
     async queue(ctx, name, params, hooks) {
-      return this.$client.push({ jobtype: name, queue: this.settings.faktory.namespaced ? `${this.broker.namespace}.${name}` : name, args: [params, { hooks, meta: ctx.meta }] })
+      return this.$client.push({ jobtype: name, queue: this.settings.faktory.namespaced && this.broker.namespace ? `${this.broker.namespace}.${name}` : name, args: [params, { hooks, meta: ctx.meta }] })
     }
   },
   async started() {
