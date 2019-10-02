@@ -194,6 +194,25 @@ describe('Faktory worker lifecycle actions', () => {
       expect(broker.call).toHaveBeenCalledWith('faktory.hooks.test.start', { test: true }, { meta: { job: job.jid } })
     })
 
+    it('should brodacast start hooks', async () => {
+      const next = jest.fn()
+      const job = {
+        jid: 1,
+        jobtype: 'job.test',
+        args: [{
+          actionParam: true
+        }, {
+          hooks: {
+            start: { broadcast: 'faktory.hooks.test.start', params: { test: true } }
+          }
+        }]
+      }
+      broker.broadcast = jest.fn()
+      await service.$worker.middleware[1]({ job }, next)
+      expect(next).toHaveBeenCalled()
+      expect(broker.broadcast).toHaveBeenCalledWith('faktory.hooks.test.start', { params: { test: true }, meta: { job: job.jid } })
+    })
+
     it('should call end hooks', async () => {
       const next = jest.fn()
       const job = {

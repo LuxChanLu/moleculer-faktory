@@ -55,10 +55,13 @@ module.exports = {
   methods: {
     async $callHook(ctx, { job, result, error }, hook) {
       if (job.args && typeof job.args[1] === 'object' && typeof job.args[1].hooks === 'object') {
-        const { hooks, meta = {} } = job.args[1]
+        const { hooks, meta } = job.args[1]
         if (typeof hooks[hook] === 'object' && typeof hooks[hook].handler === 'string') {
-          const { handler, params = {} } = hooks[hook]
-          return ctx.call(handler, params, { meta: { ...meta, job: job.jid, result, error } })
+          const { handler, params } = hooks[hook]
+          return ctx.call(handler, params || {}, { meta: { ...meta, job: job.jid, result, error } })
+        } else if (typeof hooks[hook] === 'object' &&  typeof hooks[hook].broadcast === 'string') {
+          const { broadcast, params } = hooks[hook]
+          return ctx.broadcast(broadcast, { params, meta: { ...meta, job: job.jid, result, error } })
         }
       }
       return true
