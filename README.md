@@ -1,14 +1,14 @@
 # moleculer-faktory
 
-[![Build Status](https://travis-ci.org/YourSoftRun/moleculer-faktory.svg?branch=master)](https://travis-ci.org/YourSoftRun/moleculer-faktory)
-[![Coverage Status](https://coveralls.io/repos/github/YourSoftRun/moleculer-faktory/badge.svg?branch=master)](https://coveralls.io/github/YourSoftRun/moleculer-faktory?branch=master)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3c0014c55eaa4c1cbf995d7befeb8a14)](https://www.codacy.com/app/Hugome/moleculer-faktory?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=YourSoftRun/moleculer-faktory&amp;utm_campaign=Badge_Grade)
-[![Maintainability](https://api.codeclimate.com/v1/badges/20b478c63bda641cca99/maintainability)](https://codeclimate.com/github/YourSoftRun/moleculer-faktory/maintainability)
-[![David](https://img.shields.io/david/YourSoftRun/moleculer-faktory.svg)](https://david-dm.org/YourSoftRun/moleculer-faktory)
-[![Known Vulnerabilities](https://snyk.io/test/github/YourSoftRun/moleculer-faktory/badge.svg)](https://snyk.io/test/github/YourSoftRun/moleculer-faktory)
+[![Build Status](https://travis-ci.org/LuxChanLu/moleculer-faktory.svg?branch=master)](https://travis-ci.org/LuxChanLu/moleculer-faktory)
+[![Coverage Status](https://coveralls.io/repos/github/LuxChanLu/moleculer-faktory/badge.svg?branch=master)](https://coveralls.io/github/LuxChanLu/moleculer-faktory?branch=master)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3c0014c55eaa4c1cbf995d7befeb8a14)](https://www.codacy.com/app/Hugome/moleculer-faktory?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=LuxChanLu/moleculer-faktory&amp;utm_campaign=Badge_Grade)
+[![Maintainability](https://api.codeclimate.com/v1/badges/20b478c63bda641cca99/maintainability)](https://codeclimate.com/github/LuxChanLu/moleculer-faktory/maintainability)
+[![David](https://img.shields.io/david/LuxChanLu/moleculer-faktory.svg)](https://david-dm.org/LuxChanLu/moleculer-faktory)
+[![Known Vulnerabilities](https://snyk.io/test/github/LuxChanLu/moleculer-faktory/badge.svg)](https://snyk.io/test/github/LuxChanLu/moleculer-faktory)
 
 [![Downloads](https://img.shields.io/npm/dm/moleculer-faktory.svg)](https://www.npmjs.com/package/moleculer-faktory)
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FYourSoftRun%2Fmoleculer-faktory.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FYourSoftRun%2Fmoleculer-faktory?ref=badge_shield)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FLuxChanLu%2Fmoleculer-faktory.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FLuxChanLu%2Fmoleculer-faktory?ref=badge_shield)
 
 ## How to use it
 ### Worker (Service with your jobes)
